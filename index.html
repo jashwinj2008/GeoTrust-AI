@@ -1,50 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoTrust AI - Signal Fusion Engine</title>
-    <!-- Tailwind CSS via CDN -->
+    <title>GeoTrust AI - Case Analysis</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
                     },
                     colors: {
-                        background: '#0B1121', // Darker Figma background
-                        panel: '#151E2D',     // Figma Panel color
+                        themeBg: '#080d16',
+                        themeSurface: '#0d1522',
+                        themeBorder: '#182538',
                     }
                 }
             }
         }
     </script>
     <style>
+        :root {
+            --bg-color: #080d16;
+            --surface-color: #0d1522;
+            --card-border: #182538;
+        }
+
         body {
-            background-color: #0B1121;
-            color: #f8fafc;
+            background-color: var(--bg-color);
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
 
-        .panel {
-            background-color: #151E2D;
-            border: 1px solid rgba(51, 65, 85, 0.5);
+        .panel-card {
+            background-color: #0d1522;
+            border: 1px solid #182538;
+            border-radius: 12px;
         }
 
-        /* Dial transition */
-        #scoreCircle {
-            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1), stroke 1s ease;
+        .panel-card:hover {
+            border-color: #22344e;
+        }
+
+        /* Circular Gauge Progress */
+        .gauge-circle {
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.6s ease;
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
+            height: 5px;
         }
 
         ::-webkit-scrollbar-track {
@@ -52,257 +71,817 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
+            background: #1f2f47;
+            border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: #2e4363;
+        }
+
+        .cadastral-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
         }
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col p-4 md:p-6 font-sans selection:bg-indigo-500/30">
+<body class="min-h-screen flex flex-col text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-900">
 
-    <!-- Top Header -->
-    <header class="flex items-center justify-between mb-6 px-2">
-        <div class="flex items-center gap-3">
-            <div
-                class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                GT
+    <!-- TOP HEADER -->
+    <header class="h-16 border-b border-[#152033] bg-[#070c14]/95 backdrop-blur-md px-6 flex items-center justify-between gap-4 sticky top-0 z-30">
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3 flex-shrink-0 cursor-pointer" onclick="setCase('1')">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <path d="m9 12 2 2 4-4"></path>
+                </svg>
             </div>
-            <div>
-                <h1 class="text-xl font-bold tracking-wide text-white leading-tight">GeoTrust AI</h1>
-                <p class="text-slate-400 text-xs font-medium">Signal Fusion Engine</p>
+            <div class="flex items-center gap-1.5">
+                <span class="text-base font-bold tracking-tight text-white">GeoTrust AI</span>
             </div>
         </div>
 
-        <div class="flex items-center gap-3 bg-[#151E2D] p-1.5 rounded-lg border border-slate-700 w-full max-w-md">
-            <div class="relative w-full flex items-center">
-                <input type="text" id="caseInput" placeholder="Enter Case ID: 1, 2, or 3..."
-                    class="bg-transparent text-white text-sm outline-none w-full pl-3 pr-10 py-1.5 placeholder:text-slate-500"
-                    onkeydown="if(event.key === 'Enter') runDiagnostics()">
-                <svg class="absolute right-3 w-4 h-4 text-slate-500 pointer-events-none" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        <!-- Center Search Bar -->
+        <div class="flex-1 max-w-xl">
+            <div class="flex items-center bg-[#0c131f] border border-[#1b283d] rounded-xl px-3.5 py-1.5 focus-within:border-emerald-500/60 transition-all">
+                <svg class="w-4 h-4 text-slate-400 mr-2.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
+                <input type="text" id="searchInput" placeholder="Enter Business Address or ID (e.g. Apex, Titanium, Shell)..."
+                    class="bg-transparent text-sm text-slate-100 placeholder:text-slate-400 outline-none w-full font-medium"
+                    onkeydown="if(event.key === 'Enter') handleSearch()">
             </div>
-            <button onclick="runDiagnostics()" id="runBtn"
-                class="bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-md px-4 py-1.5 transition-colors flex-shrink-0 text-sm">
-                Run Diagnostics
+        </div>
+
+        <!-- Case Switcher Tabs & View Mode Toggle -->
+        <div class="flex items-center gap-2">
+            <!-- View Mode Switcher -->
+            <div class="bg-[#0b121e] p-1 rounded-xl border border-[#18263a] flex items-center gap-1">
+                <button onclick="setViewMode('single')" id="singleViewBtn" class="px-3 py-1 text-xs font-semibold rounded-lg bg-[#162338] text-white transition-all">
+                    Focus View
+                </button>
+                <button onclick="setViewMode('compare')" id="compareViewBtn" class="px-3 py-1 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all">
+                    3-Case Grid View
+                </button>
+            </div>
+
+            <!-- Risk operations pill -->
+            <button class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0e1726] border border-[#1b2a40] text-xs font-medium text-slate-300">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Risk operations</span>
             </button>
+
+            <!-- User initials circle -->
+            <div class="w-8 h-8 rounded-full bg-[#152236] border border-slate-700/80 text-slate-300 font-bold text-xs flex items-center justify-center select-none">
+                RK
+            </div>
         </div>
     </header>
 
-    <!-- Main Grid Layout (Matching Figma) -->
-    <main class="grid grid-cols-12 gap-6 flex-1 h-[450px]">
+    <!-- CASE QUICK TABS BAR -->
+    <div class="bg-[#080d16] border-b border-[#141f30] px-6 py-2.5 flex items-center justify-between overflow-x-auto gap-4">
+        <div class="flex items-center gap-2">
+            <span class="text-xs uppercase font-bold tracking-wider text-slate-400 mr-1 flex-shrink-0">Quick Cases:</span>
+            
+            <!-- Case 1: Apex Retail (Green) -->
+            <button onclick="setCase('1')" id="tabCase1" class="case-tab px-3 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-2 bg-emerald-500/10 border-emerald-500/40 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Case 1: Apex Retail LLC</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">95</span>
+            </button>
 
-        <!-- Left Column: Entity Profile (Span 3) -->
-        <section class="panel rounded-xl p-6 col-span-3 flex flex-col relative overflow-hidden">
-            <div class="flex items-center gap-2 mb-6 border-b border-slate-700/50 pb-3">
-                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                    </path>
+            <!-- Case 2: Titanium Steel (Red) -->
+            <button onclick="setCase('2')" id="tabCase2" class="case-tab px-3 py-1 rounded-lg text-xs font-semibold border transition-all flex items-center gap-2 bg-[#0d1522] border-[#182538] text-slate-400 hover:text-rose-400 hover:border-rose-500/40">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                <span>Case 2: Titanium Steel Smelting</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300">15</span>
+            </button>
+
+            <!-- Case 3: Global Shell (Amber) -->
+            <button onclick="setCase('3')" id="tabCase3" class="case-tab px-3 py-1 rounded-lg text-xs font-semibold border transition-all flex items-center gap-2 bg-[#0d1522] border-[#182538] text-slate-400 hover:text-amber-400 hover:border-amber-500/40">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span>Case 3: Global Shell Holdings</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300">45</span>
+            </button>
+
+            <!-- Case 4: Fulton Supply (Lime) -->
+            <button onclick="setCase('GT-02481')" id="tabCase4" class="case-tab px-3 py-1 rounded-lg text-xs font-semibold border transition-all flex items-center gap-2 bg-[#0d1522] border-[#182538] text-slate-400 hover:text-lime-400 hover:border-lime-500/40">
+                <span class="w-2 h-2 rounded-full bg-[#a3e635]"></span>
+                <span>GT-02481: Fulton Supply Co.</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-lime-500/20 text-lime-300">78</span>
+            </button>
+        </div>
+
+        <div class="text-[11px] text-slate-400 font-mono hidden md:block">
+            STATIC SCENARIO DEMO ENGINE
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto w-full mx-auto max-w-[1600px]">
+
+        <!-- ========================================== -->
+        <!-- MODE 1: SINGLE CASE FOCUS VIEW -->
+        <!-- ========================================== -->
+        <div id="singleViewContainer" class="space-y-6">
+
+            <!-- CASE HEADER -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <div id="caseCategory" class="text-xs font-semibold tracking-wider text-slate-400 mb-1">
+                        Risk intelligence / Entity verification
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Case analysis</h1>
+                        <span id="caseHeaderBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                            Credible
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Case ID and Scenario -->
+                <div class="text-right">
+                    <div id="caseIdTag" class="text-sm font-mono font-bold text-white tracking-wide">
+                        CASE / 2026-001
+                    </div>
+                    <div class="text-xs text-slate-400 mt-0.5">
+                        Presentation scenario · Static analysis
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEMO NOTICE BANNER -->
+            <div class="bg-[#0b121e] border border-[#162337] rounded-xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-slate-400">
+                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Entity Profile</h2>
+                <span>DEMO DATA — Industry, area, address, signals and map are illustrative placeholders. Business name and score are applied user values.</span>
             </div>
 
-            <div class="flex flex-col gap-6 flex-1 z-10 mt-2">
-                <div>
-                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Business Name</p>
-                    <p id="profileName" class="text-base font-semibold text-white tracking-tight">--</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Claimed Industry
-                    </p>
-                    <p id="profileIndustry" class="text-sm font-medium text-slate-300">--</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Registered Sq Ft
-                    </p>
-                    <p id="profileSqFt" class="text-sm font-medium text-slate-300 font-mono">--</p>
-                </div>
-            </div>
-        </section>
+            <!-- TOP 3 CARDS ROW -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
 
-        <!-- Right Content Area (Span 9) -->
-        <div class="col-span-9 flex flex-col gap-6">
+                <!-- CARD 1: Entity Profile -->
+                <section class="panel-card p-6 lg:col-span-4 flex flex-col justify-between">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex items-center justify-between pb-3 border-b border-[#182538] mb-4">
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Entity Profile</h2>
+                            <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-[#152236] text-slate-400">DEMO</span>
+                        </div>
 
-            <!-- Top Row: Score & Signals -->
-            <div class="grid grid-cols-2 gap-6 h-[260px]">
+                        <div class="space-y-4">
+                            <div>
+                                <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Business Name</span>
+                                <h3 id="focusName" class="text-xl font-bold text-white tracking-tight">Apex Retail LLC</h3>
+                            </div>
 
-                <!-- Confidence Score -->
-                <section class="panel rounded-xl p-6 flex flex-col items-center justify-center relative">
-                    <h2 class="absolute top-6 left-6 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Confidence Score</h2>
+                            <div>
+                                <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Claimed Industry - Demo</span>
+                                <p id="focusIndustry" class="text-sm font-semibold text-slate-200">Consumer goods retail</p>
+                            </div>
 
-                    <div class="relative w-36 h-36 flex items-center justify-center mt-6">
-                        <!-- SVG Dial -->
-                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-                            <!-- Background circle -->
-                            <circle cx="50" cy="50" r="42" fill="none" stroke="#1E293B" stroke-width="8" />
-                            <!-- Progress circle (circumference = 263.89) -->
-                            <circle id="scoreCircle" cx="50" cy="50" r="42" fill="none" stroke="#334155"
-                                stroke-width="8" stroke-linecap="round" stroke-dasharray="263.89"
-                                stroke-dashoffset="263.89" />
+                            <div>
+                                <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Claimed Square Footage - Demo</span>
+                                <p id="focusSqFt" class="text-sm font-bold text-white font-mono">2,500 sq ft</p>
+                            </div>
+
+                            <div>
+                                <span class="text-[11px] font-semibold text-slate-400 block mb-0.5">Business Address - Demo</span>
+                                <p id="focusAddress" class="text-xs text-slate-300 font-medium leading-relaxed">
+                                    120 Commerce Ave, Suite 100, Sample City, SC 00000
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CARD 2: Confidence Score -->
+                <section class="panel-card p-6 lg:col-span-4 flex flex-col justify-between items-center text-center">
+                    <div class="w-full flex items-center justify-between pb-3 border-b border-[#182538] mb-2">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Confidence Score</h2>
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
                         </svg>
-                        <div class="flex flex-col items-center z-10 absolute inset-0 justify-center">
-                            <span id="scoreValue" class="text-5xl font-bold text-slate-500 tracking-tighter">--</span>
+                    </div>
+
+                    <!-- Circular Progress Gauge -->
+                    <div class="relative w-44 h-44 flex items-center justify-center my-2">
+                        <svg class="w-full h-full" viewBox="0 0 100 100">
+                            <!-- Background track -->
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#121c2c" stroke-width="7"></circle>
+                            <!-- Animated Gauge Circle -->
+                            <circle id="focusGaugeCircle" class="gauge-circle" cx="50" cy="50" r="42" fill="none" stroke="#10b981"
+                                stroke-width="7" stroke-linecap="round"
+                                stroke-dasharray="263.89" stroke-dashoffset="13.19">
+                            </circle>
+                        </svg>
+
+                        <!-- Center text -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center select-none">
+                            <span id="focusScoreNumber" class="text-5xl font-extrabold text-white tracking-tighter">95</span>
+                            <span class="text-[10px] tracking-widest uppercase font-semibold text-slate-400 mt-0.5">OUT OF 100</span>
                         </div>
                     </div>
 
-                    <div id="scoreStatus"
-                        class="mt-4 px-4 py-1.5 rounded-full bg-[#0B1121] text-slate-500 text-[10px] font-bold tracking-widest uppercase border border-slate-700 transition-colors">
-                        Awaiting Input
+                    <!-- Bottom Status and Subtext -->
+                    <div class="w-full pt-3 border-t border-[#182538]">
+                        <div id="focusStatusBadge" class="text-xs font-bold text-emerald-400">
+                            High entity confidence
+                        </div>
+                        <p id="focusStatusSubtext" class="text-[11px] text-slate-400 mt-1">
+                            Demo outcome: consistent operating footprint.
+                        </p>
                     </div>
                 </section>
 
-                <!-- Signal Fusion Breakdown -->
-                <section class="panel rounded-xl p-6 flex flex-col overflow-hidden">
-                    <h2
-                        class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-700/50 pb-3">
-                        Signal Fusion Breakdown</h2>
+                <!-- CARD 3: Signal Fusion Breakdown -->
+                <section class="panel-card p-6 lg:col-span-4 flex flex-col justify-between">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex items-center justify-between pb-3 border-b border-[#182538] mb-3">
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Signal Fusion Breakdown</h2>
+                            <span class="text-[10px] font-mono font-semibold text-slate-400">DEMO SIGNALS</span>
+                        </div>
 
-                    <div id="explanationsList" class="flex-1 overflow-y-auto pr-2 space-y-3">
-                        <div class="h-full flex flex-col items-center justify-center text-slate-500">
-                            <p class="text-sm">System idle. Enter ID to stream signals.</p>
+                        <!-- Signals Rows -->
+                        <div id="focusSignalsContainer" class="space-y-3">
+                            <!-- Injected dynamically -->
                         </div>
                     </div>
+
+                    <div class="pt-3 border-t border-[#182538] text-[10px] text-slate-400 text-center">
+                        Illustrative operations only · Not firm verification
+                    </div>
                 </section>
+
             </div>
 
-            <!-- Bottom Row: Geospatial Context -->
-            <section class="panel rounded-xl p-5 flex-1 relative overflow-hidden flex flex-col min-h-[160px]">
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 z-10">Geospatial Context</h2>
+            <!-- BOTTOM CARD: Geospatial context -->
+            <section class="panel-card p-6 relative overflow-hidden">
+                <div class="flex items-center justify-between pb-3 border-b border-[#182538] mb-4">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                            <line x1="8" y1="2" x2="8" y2="18"></line>
+                            <line x1="16" y1="6" x2="16" y2="22"></line>
+                        </svg>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Geospatial context</h2>
+                    </div>
+                    <span class="text-[10px] font-mono font-medium text-slate-400 uppercase tracking-wider">
+                        SCHEMATIC MAP · NOT GEOLOCATED DATA
+                    </span>
+                </div>
 
-                <!-- Container for Zarif's video -->
-                <div id="map-container" class="absolute inset-0 top-10 flex items-center justify-center bg-[#0d141f]">
-                    <p id="map-placeholder" class="text-slate-600 text-xs tracking-widest uppercase">Awaiting
-                        coordinates...</p>
-                    <!-- <video src="scan_anim.webm" autoplay loop muted class="w-full h-full object-cover opacity-60 mix-blend-screen"></video> -->
+                <!-- Schematic Blueprint Viewport -->
+                <div class="relative rounded-xl bg-[#09101b] border border-[#162338] h-[300px] overflow-hidden cadastral-grid select-none flex items-center justify-center">
+
+                    <!-- Left Floating Context Card -->
+                    <div class="absolute left-4 top-4 z-20 w-72 bg-[#0e1726]/95 border border-[#1e2e46] rounded-xl p-4 shadow-xl">
+                        <div id="focusZoneContext" class="text-[10px] font-mono font-bold tracking-wider text-slate-400 mb-1">
+                            ZONE CONTEXT: COMMERCIAL
+                        </div>
+                        <h4 id="focusZoneName" class="text-sm font-bold text-white mb-1.5">
+                            Commercial retail corridor
+                        </h4>
+                        <p id="focusZoneDesc" class="text-xs text-slate-300 leading-relaxed">
+                            Storefront footprint and retail zoning align with the intended use.
+                        </p>
+                    </div>
+
+                    <!-- Cadastral Vector Map Grid -->
+                    <div class="w-full h-full flex flex-col justify-center px-12 pl-80">
+                        <div class="w-full flex items-center justify-end text-[9px] font-mono tracking-widest text-slate-400 mb-1.5">
+                            <span id="focusStreetTop">COMMERCE_AVE</span>
+                        </div>
+
+                        <!-- Parcel Row 1 -->
+                        <div class="grid grid-cols-6 gap-2.5 h-16">
+                            <div class="bg-[#121c2d] border border-[#1c2c44] rounded opacity-75"></div>
+                            <div class="bg-[#121c2d] border border-[#1c2c44] rounded opacity-75"></div>
+                            <div class="bg-[#121c2d] border border-[#1c2c44] rounded opacity-75 flex items-center justify-center">
+                                <div id="focusMapPill" class="bg-[#101928] border border-slate-700/80 rounded px-2 py-0.5 text-[10px] text-slate-200 font-mono shadow">
+                                    120 COMMERCE / # 100
+                                </div>
+                            </div>
+                            <div class="bg-[#121c2d] border border-[#1c2c44] rounded opacity-75"></div>
+                            <div class="col-span-2 bg-[#121c2d] border border-[#1c2c44] rounded opacity-75 flex items-center justify-center text-[9px] font-mono tracking-widest text-slate-400">
+                                <span id="focusStreetRight">RETAIL DISTRICT</span>
+                            </div>
+                        </div>
+
+                        <!-- Divider Road -->
+                        <div class="h-3 my-1.5 border-y border-[#18263b] bg-[#0c1422] flex items-center">
+                            <div class="w-full border-t border-dashed border-slate-700/40"></div>
+                        </div>
+
+                        <!-- Parcel Row 2 (With Subject Property) -->
+                        <div class="grid grid-cols-6 gap-2.5 h-24">
+                            <div class="bg-[#121c2d] border border-[#1c2c44] rounded opacity-75"></div>
+                            <div class="bg-[#121c2d] border border-[#1c2c44] rounded opacity-75"></div>
+
+                            <!-- Subject Property Parcel -->
+                            <div id="focusSubjectParcel" class="relative rounded border-2 border-emerald-500 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center transition-all">
+                                <div id="focusContradictionBox" class="hidden w-4/5 h-4/5 border-2 border-dashed border-rose-500 rounded bg-rose-500/10 flex items-center justify-center">
+                                </div>
+                                <div id="focusPin" class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.7)] animate-pulse">
+                                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#121c2d] border border-[#1c2c44] rounded opacity-75"></div>
+                            <div class="bg-[#121c2d] border border-[#1c2c44] rounded opacity-75"></div>
+                            <div class="bg-[#121c2d] border border-[#1c2c44] rounded opacity-75"></div>
+                        </div>
+
+                        <div class="w-full flex items-center justify-center text-[9px] font-mono tracking-widest text-slate-400 mt-1.5">
+                            <span id="focusStreetBottom">MAIN_ST</span>
+                        </div>
+                    </div>
+
+                    <!-- Compass -->
+                    <div class="absolute right-5 top-5 z-20 flex flex-col items-center">
+                        <div class="w-6 h-6 rounded bg-[#0e1726]/80 border border-[#1e2e46] flex flex-col items-center justify-center text-slate-300">
+                            <span class="text-[8px] font-bold text-slate-400">N</span>
+                            <svg class="w-2.5 h-2.5 text-emerald-400 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <line x1="12" y1="19" x2="12" y2="5"></line>
+                                <polyline points="5 12 12 5 19 12"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Legend -->
+                <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span id="focusLegendDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                        <span id="focusLegendText" class="text-slate-300 font-medium">Commercial / Expected boundary</span>
+                    </div>
+                    <span class="text-[11px] text-slate-400">
+                        Presentation only · No external system data connected
+                    </span>
                 </div>
             </section>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- MODE 2: 3-CASE SIDE-BY-SIDE COMPARISON GRID (MATCHES IMAGE) -->
+        <!-- ======================================================== -->
+        <div id="compareViewContainer" class="hidden space-y-6">
+
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-white tracking-tight">Three-Scenario Verification Comparison</h2>
+                    <p class="text-xs text-slate-400">Comparing Credible, Severe Anomaly, and Shared Location detection profiles</p>
+                </div>
+                <div class="text-xs font-mono text-slate-400 bg-[#0d1522] border border-[#182538] px-3 py-1.5 rounded-lg">
+                    ALL 3 CASES LIVE IN ENGINE
+                </div>
+            </div>
+
+            <!-- 3 Columns Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- COLUMN 1: APEX RETAIL LLC (GREEN / 95) -->
+                <div class="bg-[#0b121e] border border-emerald-500/30 rounded-2xl p-5 space-y-4 shadow-[0_0_25px_rgba(16,185,129,0.08)]">
+                    <!-- Top header -->
+                    <div class="flex items-center justify-between pb-3 border-b border-[#182538]">
+                        <div>
+                            <span class="text-[10px] font-mono text-slate-400">CASE / 2026-001</span>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <h3 class="text-base font-bold text-white">Apex Retail LLC</h3>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">Credible</span>
+                            </div>
+                        </div>
+                        <button onclick="setCase('1'); setViewMode('single');" class="text-[11px] font-semibold text-emerald-400 hover:underline">Focus →</button>
+                    </div>
+
+                    <!-- Dial Meter -->
+                    <div class="flex items-center justify-center py-2">
+                        <div class="relative w-32 h-32 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="42" fill="none" stroke="#141f2e" stroke-width="7"></circle>
+                                <circle cx="50" cy="50" r="42" fill="none" stroke="#10b981" stroke-width="7" stroke-linecap="round"
+                                    stroke-dasharray="263.89" stroke-dashoffset="13.19"
+                                    style="transform: rotate(-90deg); transform-origin: 50% 50%; filter: drop-shadow(0 0 8px rgba(16,185,129,0.5));">
+                                </circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-3xl font-extrabold text-white">95</span>
+                                <span class="text-[8px] font-mono text-slate-400">OUT OF 100</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs font-bold text-emerald-400">High entity confidence</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Demo outcome: consistent operating footprint.</div>
+                    </div>
+
+                    <!-- Entity Profile Snippet -->
+                    <div class="bg-[#0e1726] border border-[#1b2b40] rounded-xl p-3 text-xs space-y-2">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Industry</span>
+                            <span class="font-semibold text-slate-200">Consumer goods retail (2,500 sq ft)</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Address</span>
+                            <span class="text-slate-300">120 Commerce Ave, Suite 100, SC 00000</span>
+                        </div>
+                    </div>
+
+                    <!-- Signals -->
+                    <div class="space-y-2">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Signal Fusion</div>
+                        <div class="space-y-1.5 text-xs">
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Zoning Match</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Aligned</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Employee Activity</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Present</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Footprint Consistency</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Normal</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Address Occupancy</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Single-occupancy</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Preview Box -->
+                    <div class="rounded-xl border border-emerald-500/40 bg-[#09101b] p-3 text-xs cadastral-grid flex items-center justify-between">
+                        <div>
+                            <div class="text-[10px] font-mono text-emerald-400 font-bold">COMMERCIAL CORRIDOR</div>
+                            <div class="text-slate-300 text-[11px]">Parcel aligns with claimed 2,500 sq ft</div>
+                        </div>
+                        <span class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: TITANIUM STEEL SMELTING (RED / 15) -->
+                <div class="bg-[#0b121e] border border-rose-500/30 rounded-2xl p-5 space-y-4 shadow-[0_0_25px_rgba(244,63,94,0.08)]">
+                    <!-- Top header -->
+                    <div class="flex items-center justify-between pb-3 border-b border-[#182538]">
+                        <div>
+                            <span class="text-[10px] font-mono text-slate-400">CASE / 2026-002</span>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <h3 class="text-base font-bold text-white">Titanium Steel Smelting</h3>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 border border-rose-500/30 text-rose-400">Severe Anomaly</span>
+                            </div>
+                        </div>
+                        <button onclick="setCase('2'); setViewMode('single');" class="text-[11px] font-semibold text-rose-400 hover:underline">Focus →</button>
+                    </div>
+
+                    <!-- Dial Meter -->
+                    <div class="flex items-center justify-center py-2">
+                        <div class="relative w-32 h-32 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="42" fill="none" stroke="#141f2e" stroke-width="7"></circle>
+                                <circle cx="50" cy="50" r="42" fill="none" stroke="#f43f5e" stroke-width="7" stroke-linecap="round"
+                                    stroke-dasharray="263.89" stroke-dashoffset="224.3"
+                                    style="transform: rotate(-90deg); transform-origin: 50% 50%; filter: drop-shadow(0 0 8px rgba(244,63,94,0.5));">
+                                </circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-3xl font-extrabold text-white">15</span>
+                                <span class="text-[8px] font-mono text-slate-400">OUT OF 100</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs font-bold text-rose-400">Low entity confidence</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Demo outcome: claimed operation lacks evidence.</div>
+                    </div>
+
+                    <!-- Entity Profile Snippet -->
+                    <div class="bg-[#0e1726] border border-[#1b2b40] rounded-xl p-3 text-xs space-y-2">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Industry</span>
+                            <span class="font-semibold text-slate-200">Heavy metal manufacturing (35,000 sq ft)</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Address</span>
+                            <span class="text-slate-300">451 Market St, Unit 2, SC 00000</span>
+                        </div>
+                    </div>
+
+                    <!-- Signals -->
+                    <div class="space-y-2">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Signal Fusion</div>
+                        <div class="space-y-1.5 text-xs">
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Zoning Match</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400">Conflict</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Employee Activity</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400">Absent</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Footprint Consistency</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400">Mismatch</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Address Occupancy</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400">Unverified</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Preview Box -->
+                    <div class="rounded-xl border border-rose-500/40 bg-[#09101b] p-3 text-xs cadastral-grid flex items-center justify-between">
+                        <div>
+                            <div class="text-[10px] font-mono text-rose-400 font-bold">RESIDENTIAL ZONE CONFLICT</div>
+                            <div class="text-slate-300 text-[11px]">Industrial smelting claimed in R-1 lot</div>
+                        </div>
+                        <span class="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"></span>
+                    </div>
+                </div>
+
+                <!-- COLUMN 3: GLOBAL SHELL HOLDINGS (AMBER / 45) -->
+                <div class="bg-[#0b121e] border border-amber-500/30 rounded-2xl p-5 space-y-4 shadow-[0_0_25px_rgba(245,158,11,0.08)]">
+                    <!-- Top header -->
+                    <div class="flex items-center justify-between pb-3 border-b border-[#182538]">
+                        <div>
+                            <span class="text-[10px] font-mono text-slate-400">CASE / 2026-003</span>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <h3 class="text-base font-bold text-white">Global Shell Holdings</h3>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 border border-amber-500/30 text-amber-400">Shared Location</span>
+                            </div>
+                        </div>
+                        <button onclick="setCase('3'); setViewMode('single');" class="text-[11px] font-semibold text-amber-400 hover:underline">Focus →</button>
+                    </div>
+
+                    <!-- Dial Meter -->
+                    <div class="flex items-center justify-center py-2">
+                        <div class="relative w-32 h-32 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="42" fill="none" stroke="#141f2e" stroke-width="7"></circle>
+                                <circle cx="50" cy="50" r="42" fill="none" stroke="#f59e0b" stroke-width="7" stroke-linecap="round"
+                                    stroke-dasharray="263.89" stroke-dashoffset="145.14"
+                                    style="transform: rotate(-90deg); transform-origin: 50% 50%; filter: drop-shadow(0 0 8px rgba(245,158,11,0.5));">
+                                </circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-3xl font-extrabold text-white">45</span>
+                                <span class="text-[8px] font-mono text-slate-400">OUT OF 100</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs font-bold text-amber-400">Mixed entity confidence</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Demo outcome: shared occupancy needs review.</div>
+                    </div>
+
+                    <!-- Entity Profile Snippet -->
+                    <div class="bg-[#0e1726] border border-[#1b2b40] rounded-xl p-3 text-xs space-y-2">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Industry</span>
+                            <span class="font-semibold text-slate-200">Investment holding company (12,000 sq ft)</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Address</span>
+                            <span class="text-slate-300">210 Commerce Ave, Suite 500, SC 00000</span>
+                        </div>
+                    </div>
+
+                    <!-- Signals -->
+                    <div class="space-y-2">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Signal Fusion</div>
+                        <div class="space-y-1.5 text-xs">
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Zoning Match</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">Partial</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Employee Activity</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">Ambiguous</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Footprint Consistency</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">Skewed</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 rounded bg-[#0e1726] border border-[#18263a]">
+                                <span class="text-slate-300">Address Occupancy</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">Shared space</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Preview Box -->
+                    <div class="rounded-xl border border-amber-500/40 bg-[#09101b] p-3 text-xs cadastral-grid flex items-center justify-between">
+                        <div>
+                            <div class="text-[10px] font-mono text-amber-400 font-bold">SHARED COMMERCIAL SUITE</div>
+                            <div class="text-slate-300 text-[11px]">Multi-tenant virtual density detected</div>
+                        </div>
+                        <span class="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
     </main>
 
+    <!-- CLIENT JAVASCRIPT -->
     <script>
-        const mockProfiles = {
-            '1': { name: 'Apex Retail LLC', industry: 'Retail Store', sqft: '2,500' },
-            '2': { name: 'Titanium Steel Smelting', industry: 'Heavy Manufacturing', sqft: '900' },
-            '3': { name: 'Global Shell Holdings', industry: 'Financial Consulting', sqft: '150' }
-        };
+        let currentCaseId = '1';
 
-        async function runDiagnostics() {
-            const caseInput = document.getElementById('caseInput');
-            const caseId = caseInput.value.trim();
-            if (!caseId) return;
+        function setViewMode(mode) {
+            const single = document.getElementById('singleViewContainer');
+            const compare = document.getElementById('compareViewContainer');
+            const singleBtn = document.getElementById('singleViewBtn');
+            const compareBtn = document.getElementById('compareViewBtn');
 
-            const runBtn = document.getElementById('runBtn');
-            const scoreValue = document.getElementById('scoreValue');
-            const scoreCircle = document.getElementById('scoreCircle');
-            const scoreStatus = document.getElementById('scoreStatus');
-            const explanationsList = document.getElementById('explanationsList');
-            const mapPlaceholder = document.getElementById('map-placeholder');
-
-            const profileName = document.getElementById('profileName');
-            const profileIndustry = document.getElementById('profileIndustry');
-            const profileSqFt = document.getElementById('profileSqFt');
-
-            // Loading state
-            runBtn.disabled = true;
-            runBtn.innerHTML = 'Running...';
-            runBtn.classList.add('opacity-70', 'cursor-not-allowed');
-
-            scoreValue.innerText = '++';
-            scoreValue.className = "text-5xl font-bold text-blue-500 tracking-tighter animate-pulse";
-            scoreCircle.style.strokeDashoffset = 263.89;
-            scoreCircle.style.stroke = '#3b82f6';
-
-            scoreStatus.innerText = 'ANALYZING...';
-            scoreStatus.className = 'mt-4 px-4 py-1.5 rounded-full text-blue-500 text-[10px] font-bold tracking-widest uppercase border border-blue-500 animate-pulse';
-
-            explanationsList.innerHTML = `<p class="text-blue-500 text-sm animate-pulse text-center mt-10">Running contradiction engine...</p>`;
-
-            mapPlaceholder.innerText = "SCANNING SATELLITE DATA...";
-            mapPlaceholder.classList.add('text-blue-500', 'animate-pulse');
-
-            // Set Profile Data
-            const profile = mockProfiles[caseId] || { name: 'Unknown Entity', industry: 'Unverified', sqft: 'N/A' };
-            profileName.innerText = profile.name;
-            profileIndustry.innerText = profile.industry;
-            profileSqFt.innerText = profile.sqft;
-
-            try {
-                const response = await fetch(`http://localhost:8080/api/evaluate/${caseId}`);
-                if (!response.ok) throw new Error('API Error');
-
-                const data = await response.json();
-                const score = data.confidenceScore;
-
-                setTimeout(() => {
-                    scoreValue.innerText = score;
-                    scoreValue.className = "text-5xl font-bold text-white tracking-tighter";
-
-                    const offset = 263.89 - (263.89 * (score / 100));
-                    scoreCircle.style.strokeDashoffset = offset;
-
-                    let strokeColor = '';
-                    if (score === 100) {
-                        strokeColor = '#10b981'; // Emerald
-                        scoreStatus.innerText = 'CREDIBLE';
-                        scoreStatus.className = 'mt-4 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold tracking-widest uppercase border border-emerald-500/20';
-                    } else if (score > 40 && score < 100) {
-                        strokeColor = '#f59e0b'; // Amber
-                        scoreStatus.innerText = 'REVIEW NEEDED';
-                        scoreStatus.className = 'mt-4 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold tracking-widest uppercase border border-amber-500/20';
-                    } else {
-                        strokeColor = '#ef4444'; // Red
-                        scoreStatus.innerText = 'HIGH RISK';
-                        scoreStatus.className = 'mt-4 px-4 py-1.5 rounded-full bg-rose-500/10 text-rose-400 text-[10px] font-bold tracking-widest uppercase border border-rose-500/20';
-                    }
-                    scoreCircle.style.stroke = strokeColor;
-
-                    explanationsList.innerHTML = '';
-                    if (data.explanations && data.explanations.length > 0) {
-                        data.explanations.forEach((exp) => {
-                            const div = document.createElement('div');
-                            div.className = 'flex gap-3 p-3 rounded-lg bg-[#0B1121]/80 border border-slate-700 text-[13px] text-slate-300 items-start';
-
-                            let icon = '';
-                            if (score === 100) icon = '✅';
-                            else if (score < 40) icon = '🔴';
-                            else icon = '⚠️';
-
-                            div.innerHTML = `
-                                <span class="mt-0.5">${icon}</span>
-                                <div class="leading-relaxed font-medium">${exp}</div>
-                            `;
-                            explanationsList.appendChild(div);
-                        });
-                    }
-
-                    mapPlaceholder.innerText = "COORDINATES LOCKED.";
-                    mapPlaceholder.classList.remove('text-blue-500', 'animate-pulse');
-                    mapPlaceholder.classList.add('text-slate-500');
-
-                }, 1000); // 1-second delay for dramatic effect
-
-            } catch (error) {
-                scoreValue.innerText = 'ERR';
-                scoreStatus.innerText = 'SYSTEM ERROR';
-                scoreCircle.style.stroke = '#ef4444';
-                explanationsList.innerHTML = `<p class="text-rose-500 text-sm">Failed to connect to Java Backend. Verify Spring Boot is running on port 8080.</p>`;
-            } finally {
-                setTimeout(() => {
-                    runBtn.disabled = false;
-                    runBtn.innerText = 'Run Diagnostics';
-                    runBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-                }, 1000);
+            if (mode === 'compare') {
+                single.classList.add('hidden');
+                compare.classList.remove('hidden');
+                compareBtn.className = "px-3 py-1 text-xs font-semibold rounded-lg bg-[#162338] text-white transition-all";
+                singleBtn.className = "px-3 py-1 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all";
+            } else {
+                compare.classList.add('hidden');
+                single.classList.remove('hidden');
+                singleBtn.className = "px-3 py-1 text-xs font-semibold rounded-lg bg-[#162338] text-white transition-all";
+                compareBtn.className = "px-3 py-1 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all";
             }
         }
+
+        function setCase(id) {
+            currentCaseId = id;
+            updateTabStyles(id);
+            loadCaseData(id);
+        }
+
+        function updateTabStyles(activeId) {
+            const tabs = [
+                { id: '1', el: document.getElementById('tabCase1'), activeClass: 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]' },
+                { id: '2', el: document.getElementById('tabCase2'), activeClass: 'bg-rose-500/10 border-rose-500/40 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.2)]' },
+                { id: '3', el: document.getElementById('tabCase3'), activeClass: 'bg-amber-500/10 border-amber-500/40 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]' },
+                { id: 'GT-02481', el: document.getElementById('tabCase4'), activeClass: 'bg-lime-500/10 border-lime-500/40 text-lime-400 shadow-[0_0_12px_rgba(163,230,53,0.2)]' }
+            ];
+
+            const inactiveClass = 'bg-[#0d1522] border-[#182538] text-slate-400';
+
+            tabs.forEach(t => {
+                if (t.id === activeId) {
+                    t.el.className = `case-tab px-3 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-2 ${t.activeClass}`;
+                } else {
+                    t.el.className = `case-tab px-3 py-1 rounded-lg text-xs font-semibold border transition-all flex items-center gap-2 ${inactiveClass}`;
+                }
+            });
+        }
+
+        function handleSearch() {
+            const input = document.getElementById('searchInput');
+            const q = input.value.trim();
+            if (q) {
+                setCase(q);
+            }
+        }
+
+        async function loadCaseData(query) {
+            try {
+                const res = await fetch(`/api/evaluate/${encodeURIComponent(query)}`);
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+
+                // Header Info
+                document.getElementById('caseIdTag').innerText = data.caseId || `CASE / ${query}`;
+                document.getElementById('caseCategory').innerText = data.category || 'Risk intelligence / Entity verification';
+                
+                const headerBadge = document.getElementById('caseHeaderBadge');
+                headerBadge.innerText = data.badgeText || 'Analyzed';
+                
+                if (data.badgeType === 'green') {
+                    headerBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400';
+                } else if (data.badgeType === 'red') {
+                    headerBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/15 border border-rose-500/30 text-rose-400';
+                } else if (data.badgeType === 'amber') {
+                    headerBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/15 border border-amber-500/30 text-amber-400';
+                } else {
+                    headerBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-lime-500/15 border border-lime-500/30 text-lime-400';
+                }
+
+                // Card 1: Profile
+                document.getElementById('focusName').innerText = data.name;
+                document.getElementById('focusIndustry').innerText = data.industry;
+                document.getElementById('focusSqFt').innerText = data.claimedSqFt;
+                document.getElementById('focusAddress').innerText = data.address;
+
+                // Card 2: Dial
+                const score = data.confidenceScore;
+                document.getElementById('focusScoreNumber').innerText = score;
+                const circle = document.getElementById('focusGaugeCircle');
+                const offset = 263.89 - (263.89 * (score / 100));
+                circle.style.strokeDashoffset = offset;
+
+                const statusBadge = document.getElementById('focusStatusBadge');
+                const subtext = document.getElementById('focusStatusSubtext');
+                statusBadge.innerText = data.statusBanner;
+                subtext.innerText = data.statusSubtext;
+
+                const parcel = document.getElementById('focusSubjectParcel');
+                const contradictionBox = document.getElementById('focusContradictionBox');
+                const pin = document.getElementById('focusPin');
+                const legendDot = document.getElementById('focusLegendDot');
+
+                if (data.statusType === 'green') {
+                    circle.style.stroke = '#10b981';
+                    circle.style.filter = 'drop-shadow(0 0 10px rgba(16,185,129,0.5))';
+                    statusBadge.className = 'text-xs font-bold text-emerald-400';
+                    parcel.className = 'relative rounded border-2 border-emerald-500 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center transition-all';
+                    contradictionBox.classList.add('hidden');
+                    pin.className = 'w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.7)] animate-pulse';
+                    legendDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
+                } else if (data.statusType === 'red') {
+                    circle.style.stroke = '#f43f5e';
+                    circle.style.filter = 'drop-shadow(0 0 10px rgba(244,63,94,0.5))';
+                    statusBadge.className = 'text-xs font-bold text-rose-400';
+                    parcel.className = 'relative rounded border-2 border-rose-500 bg-rose-500/10 shadow-[0_0_20px_rgba(244,63,94,0.3)] flex items-center justify-center transition-all';
+                    contradictionBox.classList.remove('hidden');
+                    pin.className = 'w-7 h-7 rounded-full bg-rose-500/20 border border-rose-400 flex items-center justify-center text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.7)] animate-bounce';
+                    legendDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
+                } else if (data.statusType === 'amber') {
+                    circle.style.stroke = '#f59e0b';
+                    circle.style.filter = 'drop-shadow(0 0 10px rgba(245,158,11,0.5))';
+                    statusBadge.className = 'text-xs font-bold text-amber-400';
+                    parcel.className = 'relative rounded border-2 border-amber-500 bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.3)] flex items-center justify-center transition-all';
+                    contradictionBox.classList.add('hidden');
+                    pin.className = 'w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.7)] animate-pulse';
+                    legendDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+                } else {
+                    circle.style.stroke = '#a3e635';
+                    circle.style.filter = 'drop-shadow(0 0 10px rgba(163,230,53,0.5))';
+                    statusBadge.className = 'text-xs font-bold text-lime-400';
+                    parcel.className = 'relative rounded border-2 border-lime-400 bg-lime-400/10 shadow-[0_0_20px_rgba(163,230,53,0.3)] flex items-center justify-center transition-all';
+                    contradictionBox.classList.remove('hidden');
+                    pin.className = 'w-7 h-7 rounded-full bg-lime-400/20 border border-lime-400 flex items-center justify-center text-lime-400 shadow-[0_0_12px_rgba(163,230,53,0.7)] animate-bounce';
+                    legendDot.className = 'w-2.5 h-2.5 rounded-full bg-lime-400';
+                }
+
+                // Card 3: Signals List
+                const signalsBox = document.getElementById('focusSignalsContainer');
+                signalsBox.innerHTML = '';
+                if (data.signals) {
+                    data.signals.forEach(sig => {
+                        const row = document.createElement('div');
+                        row.className = 'p-2.5 rounded-lg bg-[#0e1726] border border-[#18263a] flex items-start justify-between gap-3';
+                        
+                        let badgeColorClass = 'bg-emerald-500/15 text-emerald-400';
+                        if (sig.status === 'contradiction' || sig.badge === 'Conflict' || sig.badge === 'Mismatch' || sig.badge === 'Absent' || sig.badge === 'Unverified') {
+                            badgeColorClass = 'bg-rose-500/15 text-rose-400';
+                        } else if (sig.status === 'amber' || sig.badge === 'Partial' || sig.badge === 'Ambiguous' || sig.badge === 'Skewed' || sig.badge === 'Shared space') {
+                            badgeColorClass = 'bg-amber-500/15 text-amber-400';
+                        }
+
+                        row.innerHTML = `
+                            <div>
+                                <div class="text-xs font-bold text-slate-200">${sig.title}</div>
+                                <div class="text-[11px] text-slate-400 mt-0.5">${sig.desc}</div>
+                            </div>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${badgeColorClass} flex-shrink-0 mt-0.5">
+                                ${sig.badge || (sig.status === 'verified' ? 'Aligned' : 'Conflict')}
+                            </span>
+                        `;
+                        signalsBox.appendChild(row);
+                    });
+                }
+
+                // Geospatial Context Card
+                document.getElementById('focusZoneContext').innerText = data.zoneContext || 'ZONE CONTEXT';
+                document.getElementById('focusZoneName').innerText = data.zoneName || 'Corridor';
+                document.getElementById('focusZoneDesc').innerText = data.zoneDescription || '';
+                document.getElementById('focusStreetTop').innerText = data.streetName1 || 'COMMERCE_AVE';
+                document.getElementById('focusStreetRight').innerText = data.streetName2 || 'DISTRICT';
+                document.getElementById('focusStreetBottom').innerText = data.streetName3 || 'MAIN_ST';
+                document.getElementById('focusMapPill').innerText = data.mapLabel || '120 COMMERCE';
+                document.getElementById('focusLegendText').innerText = data.legendText || 'Commercial / Expected boundary';
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Initialize with Case 1 (Apex Retail)
+        window.addEventListener('DOMContentLoaded', () => {
+            setCase('1');
+        });
     </script>
 </body>
 
