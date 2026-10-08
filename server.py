@@ -7,14 +7,13 @@ PORT = 8080
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATABASE = {
-    # CASE 1: Apex Retail LLC (Score 95 - Green / High Confidence)
+    # CASE 1: Apex Retail LLC (Score 95 - Green / Credible)
     "1": {
         "caseId": "CASE / 2026-001",
         "caseKey": "1",
         "badgeText": "Credible",
         "badgeType": "green",
         "category": "Risk intelligence / Entity verification",
-        "analysisType": "Presentation scenario · Static analysis",
         "name": "Apex Retail LLC",
         "industry": "Consumer goods retail",
         "claimedSqFt": "2,500 sq ft",
@@ -26,7 +25,7 @@ DATABASE = {
         "zoneContext": "ZONE CONTEXT: COMMERCIAL",
         "zoneName": "Commercial retail corridor",
         "zoneDescription": "Storefront footprint and retail zoning align with the intended use.",
-        "coordinates": "33.8361° N, 81.1637° W",
+        "coordinates": "33.8361\u00b0 N, 81.1637\u00b0 W",
         "claimedAreaNumber": "2,500 sq ft",
         "observedAreaNumber": "2,500 sq ft",
         "areaDiscrepancy": "Aligned with parcel boundary",
@@ -38,83 +37,97 @@ DATABASE = {
         "signals": [
             {
                 "title": "Zoning Match",
-                "desc": "Parcel zoned commercial/active demo commercial zone",
+                "desc": "Parcel zoned commercial \u00b7 active demo commercial zone.",
                 "badge": "Aligned",
-                "status": "verified"
+                "status": "verified",
+                "source": "CITY"
             },
             {
                 "title": "Employee Activity",
-                "desc": "Record of preliminary activity across workforce feeds.",
+                "desc": "Record of workforce activity across multiple payroll feeds.",
                 "badge": "Present",
-                "status": "verified"
+                "status": "verified",
+                "source": "STATE REG"
             },
             {
                 "title": "Footprint Consistency",
-                "desc": "Observed footprint support for the claimed 2,500 sq ft.",
+                "desc": "Observed parcel supports the claimed 2,500 sq ft footprint.",
                 "badge": "Normal",
-                "status": "verified"
+                "status": "verified",
+                "source": "PARCEL"
             },
             {
                 "title": "Address Occupancy",
-                "desc": "One sole tenant associated with the demo suite.",
+                "desc": "One sole tenant confirmed at the commercial suite.",
                 "badge": "Single-occupancy",
-                "status": "verified"
+                "status": "verified",
+                "source": "USPS"
             }
         ]
     },
 
-    # CASE 2: Titanium Steel Smelting (Score 15 - Red / Severe Anomaly)
+    # CASE 2: Phantom Logistics LLC (Score 12 - Red / Ghost Address)
     "2": {
         "caseId": "CASE / 2026-002",
         "caseKey": "2",
-        "badgeText": "Severe Anomaly",
+        "badgeText": "Ghost Address",
         "badgeType": "red",
         "category": "Risk intelligence / Entity verification",
-        "analysisType": "Presentation scenario · Static analysis",
-        "name": "Titanium Steel Smelting",
-        "industry": "Heavy metal manufacturing",
-        "claimedSqFt": "35,000 sq ft",
-        "address": "451 Market St, Unit 2, Sample City, SC 00000",
-        "confidenceScore": 15,
-        "statusBanner": "Low entity confidence",
+        "name": "Phantom Logistics LLC",
+        "industry": "Freight & cargo transportation",
+        "claimedSqFt": "18,000 sq ft",
+        "address": "9 Industrial Blvd, Unit 7, Vacant Lot, SC 00000",
+        "confidenceScore": 12,
+        "statusBanner": "Ghost address detected",
         "statusType": "red",
-        "statusSubtext": "Demo outcome: claimed operation lacks evidence.",
-        "zoneContext": "ZONE CONTEXT: RESIDENTIAL",
-        "zoneName": "Residential neighborhood",
-        "zoneDescription": "Quiet residential parcel in contradiction with a heavy industrial facility.",
-        "coordinates": "34.0012° N, 81.0348° W",
-        "claimedAreaNumber": "35,000 sq ft",
-        "observedAreaNumber": "1,200 sq ft",
-        "areaDiscrepancy": "Severe contradiction: R-1 residential lot",
-        "mapLabel": "451 Market St",
-        "streetName1": "MARKET_ST",
-        "streetName2": "RESIDENTIAL ZONE",
-        "streetName3": "OAK_LANE",
-        "legendText": "Contradiction / Exceeds boundary",
+        "statusSubtext": "Demo outcome: address does not correspond to any real structure.",
+        "zoneContext": "ZONE CONTEXT: VACANT / UNVERIFIABLE",
+        "zoneName": "Vacant lot \u00b7 No structure confirmed",
+        "zoneDescription": "Satellite and parcel data show an empty undeveloped lot. No warehouse, dock, or commercial structure exists at this address.",
+        "coordinates": "33.9211\u00b0 N, 81.0499\u00b0 W",
+        "claimedAreaNumber": "18,000 sq ft",
+        "observedAreaNumber": "0 sq ft (vacant)",
+        "areaDiscrepancy": "No structure observed at GPS coordinates",
+        "mapLabel": "9 Industrial Blvd",
+        "streetName1": "INDUSTRIAL_BLVD",
+        "streetName2": "VACANT LOT \u00b7 UNBUILT",
+        "streetName3": "FREIGHT_RD",
+        "legendText": "Ghost address \u00b7 No observable structure",
         "signals": [
             {
-                "title": "Zoning Match",
-                "desc": "Residential demo zone excludes industrial smelting.",
-                "badge": "Conflict",
-                "status": "contradiction"
+                "title": "Address Deliverability",
+                "desc": "USPS flags address as undeliverable \u00b7 no structure on record.",
+                "badge": "Undeliverable",
+                "status": "contradiction",
+                "source": "USPS"
+            },
+            {
+                "title": "Parcel Structure",
+                "desc": "Satellite imagery confirms vacant undeveloped land at coordinates.",
+                "badge": "No structure",
+                "status": "contradiction",
+                "source": "PARCEL"
             },
             {
                 "title": "Employee Activity",
-                "desc": "No observing workforce activity in the demo surface.",
-                "badge": "Absent",
-                "status": "contradiction"
+                "desc": "Zero workforce registrations or payroll filings at this address.",
+                "badge": "Zero activity",
+                "status": "contradiction",
+                "source": "STATE REG"
             },
             {
-                "title": "Footprint Consistency",
-                "desc": "Small parcel cannot support the claimed 35,000 sq ft.",
-                "badge": "Mismatch",
-                "status": "contradiction"
+                "title": "Utility Connections",
+                "desc": "No active electricity, water, or commercial utility accounts found.",
+                "badge": "No utilities",
+                "status": "contradiction",
+                "source": "UTILITY"
             },
             {
-                "title": "Address Occupancy",
-                "desc": "No industrial occupant linked to the demo address.",
-                "badge": "Unverified",
-                "status": "contradiction"
+                "title": "Business Registry",
+                "desc": "Entity filed with state but agent address differs from claimed location.",
+                "badge": "Agent mismatch",
+                "status": "contradiction",
+                "source": "IL SOS"
             }
         ]
     },
@@ -126,7 +139,6 @@ DATABASE = {
         "badgeText": "Shared Location",
         "badgeType": "amber",
         "category": "Risk intelligence / Entity verification",
-        "analysisType": "Presentation scenario · Static analysis",
         "name": "Global Shell Holdings",
         "industry": "Investment holding company",
         "claimedSqFt": "12,000 sq ft",
@@ -134,11 +146,11 @@ DATABASE = {
         "confidenceScore": 45,
         "statusBanner": "Mixed entity confidence",
         "statusType": "amber",
-        "statusSubtext": "Demo outcome: shared occupancy needs review.",
+        "statusSubtext": "Demo outcome: shared occupancy requires further review.",
         "zoneContext": "ZONE CONTEXT: MIXED-USE",
         "zoneName": "Multi-tenant office district",
         "zoneDescription": "Shared office parcel is plausible, but the entity's exclusive footprint is unclear.",
-        "coordinates": "33.8415° N, 81.1580° W",
+        "coordinates": "33.8415\u00b0 N, 81.1580\u00b0 W",
         "claimedAreaNumber": "12,000 sq ft",
         "observedAreaNumber": "1,800 sq ft suite",
         "areaDiscrepancy": "Multiple entities registered to shared suite",
@@ -152,112 +164,38 @@ DATABASE = {
                 "title": "Zoning Match",
                 "desc": "Office use permitted in commercial zone.",
                 "badge": "Partial",
-                "status": "amber"
+                "status": "verified",
+                "source": "CITY"
             },
             {
                 "title": "Employee Activity",
                 "desc": "Activity detected but inconsistent for stated firm density.",
                 "badge": "Ambiguous",
-                "status": "amber"
+                "status": "contradiction",
+                "source": "STATE REG"
             },
             {
                 "title": "Footprint Consistency",
                 "desc": "Claimed 12,000 sq ft exceeds apparent suite share.",
                 "badge": "Skewed",
-                "status": "amber"
+                "status": "contradiction",
+                "source": "PARCEL"
             },
             {
                 "title": "Address Occupancy",
-                "desc": "Multiple distinct organizations share the same suite.",
+                "desc": "Multiple distinct organizations share the same suite address.",
                 "badge": "Shared space",
-                "status": "amber"
-            }
-        ]
-    },
-
-    # CASE 4: Fulton Supply Co. (Score 78 - Lime / Review Needed)
-    "GT-02481": {
-        "caseId": "CASE GT-02481",
-        "caseKey": "GT-02481",
-        "badgeText": "Manual Review",
-        "badgeType": "lime",
-        "category": "Risk intelligence / Entity verification",
-        "analysisType": "Presentation scenario · Static analysis",
-        "name": "Fulton Supply Co.",
-        "industry": "Wholesale building materials",
-        "claimedSqFt": "4,800 sq ft",
-        "address": "1840 W Fulton St, Chicago, IL 60612",
-        "confidenceScore": 78,
-        "statusBanner": "Manual review · 2 contradictions",
-        "statusType": "lime",
-        "statusSubtext": "Claim confidence, not a fraud-risk probability.",
-        "zoneContext": "ZONE CONTEXT: COMMERCIAL / INDUSTRIAL",
-        "zoneName": "Fulton Market corridor",
-        "zoneDescription": "Building footprint observed smaller than applicant claimed square footage.",
-        "coordinates": "41.8867° N, 87.6734° W",
-        "claimedAreaNumber": "4,800 sq ft",
-        "observedAreaNumber": "3,100 sq ft",
-        "areaDiscrepancy": "35% below claimed area",
-        "mapLabel": "1840 W Fulton St",
-        "streetName1": "W_FULTON_ST",
-        "streetName2": "FULTON MARKET",
-        "streetName3": "N_LAKE_ST",
-        "legendText": "Subject parcel / Footprint contradiction",
-        "signals": [
-            {
-                "title": "Business registry",
-                "desc": "Legal name and active status matched",
-                "badge": "IL SOS",
-                "status": "verified"
-            },
-            {
-                "title": "Address validation",
-                "desc": "Deliverable commercial address",
-                "badge": "USPS",
-                "status": "verified"
-            },
-            {
-                "title": "Commercial zoning",
-                "desc": "Wholesale use permitted in M2-3",
-                "badge": "CITY",
-                "status": "verified"
-            },
-            {
-                "title": "Building footprint",
-                "desc": "3,100 sq ft observed vs. 4,800 claimed",
-                "badge": "PARCEL",
-                "status": "contradiction"
-            },
-            {
-                "title": "Industry alignment",
-                "desc": "Current listing indicates self-storage",
-                "badge": "PLACES",
-                "status": "contradiction"
+                "status": "contradiction",
+                "source": "USPS"
             }
         ]
     }
 }
 
 ALIASES = {
-    "1": "1",
-    "case 1": "1",
-    "case1": "1",
-    "apex": "1",
-    "2026-001": "1",
-    "2": "2",
-    "case 2": "2",
-    "case2": "2",
-    "titanium": "2",
-    "2026-002": "2",
-    "3": "3",
-    "case 3": "3",
-    "case3": "3",
-    "shell": "3",
-    "global": "3",
-    "2026-003": "3",
-    "fulton": "GT-02481",
-    "gt-02481": "GT-02481",
-    "1840": "GT-02481"
+    "1": "1", "apex": "1", "retail": "1", "credible": "1",
+    "2": "2", "phantom": "2", "ghost": "2", "logistics": "2", "vacant": "2",
+    "3": "3", "shell": "3", "global": "3", "holdings": "3", "shared": "3",
 }
 
 def resolve_case(query):
@@ -266,20 +204,18 @@ def resolve_case(query):
     q = query.strip()
     if q in DATABASE:
         return DATABASE[q]
-    
     q_lower = q.lower()
     for alias_key, target in ALIASES.items():
         if alias_key in q_lower:
             return DATABASE[target]
-
     for k, v in DATABASE.items():
-        if (q_lower in k.lower() or 
-            q_lower in v["name"].lower() or 
-            q_lower in v["address"].lower() or 
-            q_lower in v["caseId"].lower()):
+        if (q_lower in k.lower() or
+                q_lower in v["name"].lower() or
+                q_lower in v["address"].lower() or
+                q_lower in v["caseId"].lower()):
             return v
-
     return DATABASE["1"]
+
 
 class GeoTrustHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -303,7 +239,6 @@ class GeoTrustHandler(http.server.SimpleHTTPRequestHandler):
             case_id = path.replace("/api/evaluate/", "").replace("/api/evaluate", "").strip()
             case_id = urllib.parse.unquote(case_id)
             data = resolve_case(case_id if case_id else "1")
-            
             result = dict(data)
             result["explanations"] = [
                 f"{'CRITICAL: ' if s['status'] == 'contradiction' else 'VERIFIED: '}{s['title']} - {s['desc']}"
@@ -315,11 +250,11 @@ class GeoTrustHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(result).encode("utf-8"))
             return
 
-        # Serve index.html for root
         if path in ("", "/"):
             self.path = "/index.html"
 
         return super().do_GET()
+
 
 def run():
     server_address = ("", PORT)
@@ -331,6 +266,7 @@ def run():
         pass
     finally:
         httpd.server_close()
+
 
 if __name__ == "__main__":
     run()
