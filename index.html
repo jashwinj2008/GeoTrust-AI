@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoTrust AI - Signal Fusion Engine</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                    },
+                    colors: {
+                        background: '#0B1121', // Darker Figma background
+                        panel: '#151E2D',     // Figma Panel color
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B1121;
+            color: #f8fafc;
+        }
+
+        .panel {
+            background-color: #151E2D;
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        /* Dial transition */
+        #scoreCircle {
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1), stroke 1s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col p-4 md:p-6 font-sans selection:bg-indigo-500/30">
+
+    <!-- Top Header -->
+    <header class="flex items-center justify-between mb-6 px-2">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                GT
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide text-white leading-tight">GeoTrust AI</h1>
+                <p class="text-slate-400 text-xs font-medium">Signal Fusion Engine</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 bg-[#151E2D] p-1.5 rounded-lg border border-slate-700 w-full max-w-md">
+            <div class="relative w-full flex items-center">
+                <input type="text" id="caseInput" placeholder="Enter Case ID: 1, 2, or 3..."
+                    class="bg-transparent text-white text-sm outline-none w-full pl-3 pr-10 py-1.5 placeholder:text-slate-500"
+                    onkeydown="if(event.key === 'Enter') runDiagnostics()">
+                <svg class="absolute right-3 w-4 h-4 text-slate-500 pointer-events-none" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <button onclick="runDiagnostics()" id="runBtn"
+                class="bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-md px-4 py-1.5 transition-colors flex-shrink-0 text-sm">
+                Run Diagnostics
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Grid Layout (Matching Figma) -->
+    <main class="grid grid-cols-12 gap-6 flex-1 h-[450px]">
+
+        <!-- Left Column: Entity Profile (Span 3) -->
+        <section class="panel rounded-xl p-6 col-span-3 flex flex-col relative overflow-hidden">
+            <div class="flex items-center gap-2 mb-6 border-b border-slate-700/50 pb-3">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                    </path>
+                </svg>
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Entity Profile</h2>
+            </div>
+
+            <div class="flex flex-col gap-6 flex-1 z-10 mt-2">
+                <div>
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Business Name</p>
+                    <p id="profileName" class="text-base font-semibold text-white tracking-tight">--</p>
+                </div>
+                <div>
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Claimed Industry
+                    </p>
+                    <p id="profileIndustry" class="text-sm font-medium text-slate-300">--</p>
+                </div>
+                <div>
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Registered Sq Ft
+                    </p>
+                    <p id="profileSqFt" class="text-sm font-medium text-slate-300 font-mono">--</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Content Area (Span 9) -->
+        <div class="col-span-9 flex flex-col gap-6">
+
+            <!-- Top Row: Score & Signals -->
+            <div class="grid grid-cols-2 gap-6 h-[260px]">
+
+                <!-- Confidence Score -->
+                <section class="panel rounded-xl p-6 flex flex-col items-center justify-center relative">
+                    <h2 class="absolute top-6 left-6 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        Confidence Score</h2>
+
+                    <div class="relative w-36 h-36 flex items-center justify-center mt-6">
+                        <!-- SVG Dial -->
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                            <!-- Background circle -->
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#1E293B" stroke-width="8" />
+                            <!-- Progress circle (circumference = 263.89) -->
+                            <circle id="scoreCircle" cx="50" cy="50" r="42" fill="none" stroke="#334155"
+                                stroke-width="8" stroke-linecap="round" stroke-dasharray="263.89"
+                                stroke-dashoffset="263.89" />
+                        </svg>
+                        <div class="flex flex-col items-center z-10 absolute inset-0 justify-center">
+                            <span id="scoreValue" class="text-5xl font-bold text-slate-500 tracking-tighter">--</span>
+                        </div>
+                    </div>
+
+                    <div id="scoreStatus"
+                        class="mt-4 px-4 py-1.5 rounded-full bg-[#0B1121] text-slate-500 text-[10px] font-bold tracking-widest uppercase border border-slate-700 transition-colors">
+                        Awaiting Input
+                    </div>
+                </section>
+
+                <!-- Signal Fusion Breakdown -->
+                <section class="panel rounded-xl p-6 flex flex-col overflow-hidden">
+                    <h2
+                        class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-700/50 pb-3">
+                        Signal Fusion Breakdown</h2>
+
+                    <div id="explanationsList" class="flex-1 overflow-y-auto pr-2 space-y-3">
+                        <div class="h-full flex flex-col items-center justify-center text-slate-500">
+                            <p class="text-sm">System idle. Enter ID to stream signals.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Bottom Row: Geospatial Context -->
+            <section class="panel rounded-xl p-5 flex-1 relative overflow-hidden flex flex-col min-h-[160px]">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 z-10">Geospatial Context</h2>
+
+                <!-- Container for Zarif's video -->
+                <div id="map-container" class="absolute inset-0 top-10 flex items-center justify-center bg-[#0d141f]">
+                    <p id="map-placeholder" class="text-slate-600 text-xs tracking-widest uppercase">Awaiting
+                        coordinates...</p>
+                    <!-- <video src="scan_anim.webm" autoplay loop muted class="w-full h-full object-cover opacity-60 mix-blend-screen"></video> -->
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <script>
+        const mockProfiles = {
+            '1': { name: 'Apex Retail LLC', industry: 'Retail Store', sqft: '2,500' },
+            '2': { name: 'Titanium Steel Smelting', industry: 'Heavy Manufacturing', sqft: '900' },
+            '3': { name: 'Global Shell Holdings', industry: 'Financial Consulting', sqft: '150' }
+        };
+
+        async function runDiagnostics() {
+            const caseInput = document.getElementById('caseInput');
+            const caseId = caseInput.value.trim();
+            if (!caseId) return;
+
+            const runBtn = document.getElementById('runBtn');
+            const scoreValue = document.getElementById('scoreValue');
+            const scoreCircle = document.getElementById('scoreCircle');
+            const scoreStatus = document.getElementById('scoreStatus');
+            const explanationsList = document.getElementById('explanationsList');
+            const mapPlaceholder = document.getElementById('map-placeholder');
+
+            const profileName = document.getElementById('profileName');
+            const profileIndustry = document.getElementById('profileIndustry');
+            const profileSqFt = document.getElementById('profileSqFt');
+
+            // Loading state
+            runBtn.disabled = true;
+            runBtn.innerHTML = 'Running...';
+            runBtn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            scoreValue.innerText = '++';
+            scoreValue.className = "text-5xl font-bold text-blue-500 tracking-tighter animate-pulse";
+            scoreCircle.style.strokeDashoffset = 263.89;
+            scoreCircle.style.stroke = '#3b82f6';
+
+            scoreStatus.innerText = 'ANALYZING...';
+            scoreStatus.className = 'mt-4 px-4 py-1.5 rounded-full text-blue-500 text-[10px] font-bold tracking-widest uppercase border border-blue-500 animate-pulse';
+
+            explanationsList.innerHTML = `<p class="text-blue-500 text-sm animate-pulse text-center mt-10">Running contradiction engine...</p>`;
+
+            mapPlaceholder.innerText = "SCANNING SATELLITE DATA...";
+            mapPlaceholder.classList.add('text-blue-500', 'animate-pulse');
+
+            // Set Profile Data
+            const profile = mockProfiles[caseId] || { name: 'Unknown Entity', industry: 'Unverified', sqft: 'N/A' };
+            profileName.innerText = profile.name;
+            profileIndustry.innerText = profile.industry;
+            profileSqFt.innerText = profile.sqft;
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/evaluate/${caseId}`);
+                if (!response.ok) throw new Error('API Error');
+
+                const data = await response.json();
+                const score = data.confidenceScore;
+
+                setTimeout(() => {
+                    scoreValue.innerText = score;
+                    scoreValue.className = "text-5xl font-bold text-white tracking-tighter";
+
+                    const offset = 263.89 - (263.89 * (score / 100));
+                    scoreCircle.style.strokeDashoffset = offset;
+
+                    let strokeColor = '';
+                    if (score === 100) {
+                        strokeColor = '#10b981'; // Emerald
+                        scoreStatus.innerText = 'CREDIBLE';
+                        scoreStatus.className = 'mt-4 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold tracking-widest uppercase border border-emerald-500/20';
+                    } else if (score > 40 && score < 100) {
+                        strokeColor = '#f59e0b'; // Amber
+                        scoreStatus.innerText = 'REVIEW NEEDED';
+                        scoreStatus.className = 'mt-4 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold tracking-widest uppercase border border-amber-500/20';
+                    } else {
+                        strokeColor = '#ef4444'; // Red
+                        scoreStatus.innerText = 'HIGH RISK';
+                        scoreStatus.className = 'mt-4 px-4 py-1.5 rounded-full bg-rose-500/10 text-rose-400 text-[10px] font-bold tracking-widest uppercase border border-rose-500/20';
+                    }
+                    scoreCircle.style.stroke = strokeColor;
+
+                    explanationsList.innerHTML = '';
+                    if (data.explanations && data.explanations.length > 0) {
+                        data.explanations.forEach((exp) => {
+                            const div = document.createElement('div');
+                            div.className = 'flex gap-3 p-3 rounded-lg bg-[#0B1121]/80 border border-slate-700 text-[13px] text-slate-300 items-start';
+
+                            let icon = '';
+                            if (score === 100) icon = '✅';
+                            else if (score < 40) icon = '🔴';
+                            else icon = '⚠️';
+
+                            div.innerHTML = `
+                                <span class="mt-0.5">${icon}</span>
+                                <div class="leading-relaxed font-medium">${exp}</div>
+                            `;
+                            explanationsList.appendChild(div);
+                        });
+                    }
+
+                    mapPlaceholder.innerText = "COORDINATES LOCKED.";
+                    mapPlaceholder.classList.remove('text-blue-500', 'animate-pulse');
+                    mapPlaceholder.classList.add('text-slate-500');
+
+                }, 1000); // 1-second delay for dramatic effect
+
+            } catch (error) {
+                scoreValue.innerText = 'ERR';
+                scoreStatus.innerText = 'SYSTEM ERROR';
+                scoreCircle.style.stroke = '#ef4444';
+                explanationsList.innerHTML = `<p class="text-rose-500 text-sm">Failed to connect to Java Backend. Verify Spring Boot is running on port 8080.</p>`;
+            } finally {
+                setTimeout(() => {
+                    runBtn.disabled = false;
+                    runBtn.innerText = 'Run Diagnostics';
+                    runBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+
+</html>

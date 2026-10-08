@@ -1,0 +1,5 @@
+com/geotrust/GeoTrustApiApplication.class
+com/geotrust/controller/EvaluationController.class
+com/geotrust/model/EvaluationResult.class
+com/geotrust/service/EvaluationService.class
+com/geotrust/model/BusinessProfile.class
